@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Définition d'une structure pour représenter un client
+
+typedef struct Client {
+    int numeroTicket;
+    struct Client* suivant;
+} Client;
+
+// Définition d'une structure pour représenter la file d'attente
+
+typedef struct FileAttente {
+    Client* tete;
+    Client* queue;
+    int taille;
+} FileAttente;
+
+// Fonction pour créer une nouvelle file d'attente
+
+FileAttente* creerFileAttente() {
+    FileAttente* file = malloc(sizeof(FileAttente));
+    file->tete = NULL;
+    file->queue = NULL;
+    file->taille = 0;
+    return file;
+}
+
+// Fonction pour créer un nouveau client
+
+Client* creerClient(int numeroTicket) {
+    Client* nouveauClient = malloc(sizeof(Client));
+    nouveauClient->numeroTicket = numeroTicket;
+    nouveauClient->suivant = NULL;
+    return nouveauClient;
+}
+
+// Fonction pour ajouter un client à la file d'attente
+
+void ajouterClient(FileAttente* file, int numeroTicket) {
+    if (file->taille >= 10) {
+        printf("La file d'attente est pleine, le client avec le ticket %d quitte la file.\n", numeroTicket);
+        return;
+    }
+    Client* nouveauClient = creerClient(numeroTicket);
+    if (file->queue == NULL) {
+        file->tete = file->queue = nouveauClient;
+    } else {
+        file->queue->suivant = nouveauClient;
+        file->queue = nouveauClient;
+    }
+    file->taille++;
+    printf("Le client avec le ticket %d a ete ajoute a la file d'attente.\n", numeroTicket);
+}
+
+// Fonction pour servir un client
+
+void servirClient(FileAttente* file) {
+    if (file->tete == NULL) {
+        printf("La file d'attente est vide.\n");
+        return;
+    }
+    Client* temp = file->tete;
+    file->tete = file->tete->suivant;
+    if (file->tete == NULL) {
+        file->queue = NULL;
+    }
+    printf("Le client avec le ticket %d a ete servi et quitte la file d'attente.\n", temp->numeroTicket);
+    free(temp);
+    file->taille--;
+}
+
+// Fonction pour afficher la file d'attente
+
+void afficherFileAttente(FileAttente* file) {
+    if (file->tete == NULL) {
+        printf("La file d'attente est vide.\n");
+        return;
+    }
+    Client* temp = file->tete;
+    printf("File d'attente actuelle: ");
+    while (temp != NULL) {
+        printf("%d ", temp->numeroTicket);
+        temp = temp->suivant;
+    }
+    printf("\n");
+}
+
+// Fonction principale
+
+int main() {
+    FileAttente* file = creerFileAttente();
+    int choix, numeroTicket = 1;
+
+    printf("\nGestion de la file d attente dans un restaurant\n");
+
+    while (1) {
+        printf("\n1. Ajouter un client\n2. Servir un client\n3. Afficher la file d'attente\n4. Quitter\n");
+        printf("Entrez votre choix: ");
+        scanf("%d", &choix);
+
+        switch (choix) {
+            case 1:
+                ajouterClient(file, numeroTicket++);
+                break;
+            case 2:
+                servirClient(file);
+                break;
+            case 3:
+                afficherFileAttente(file);
+                break;
+            case 4:
+                printf("Fermeture du programme.\n\n");
+                exit(0);
+            default:
+                printf("Choix invalide. Veuillez réessayer.\n");
+        }
+    }
+
+    return 0;
+}
