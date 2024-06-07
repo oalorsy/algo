@@ -1,0 +1,241 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct noeud_s {
+    int valeur;
+    struct noeud_s *gauche;
+    struct noeud_s *droit;
+} *noeud_t;
+
+typedef noeud_t arbre_t;
+
+// Fonction pour créer un nouvel arbre avec une valeur donnée
+arbre_t cree_arbre(int valeur, arbre_t gauche, arbre_t droit) {
+    arbre_t arbre = malloc(sizeof(struct noeud_s));
+    arbre->valeur = valeur;
+    arbre->gauche = gauche;
+    arbre->droit = droit;
+    return arbre;
+}
+
+// Fonction pour détruire un arbre
+void detruit_arbre(arbre_t arbre) {
+    if (arbre == NULL)
+        return;
+    detruit_arbre(arbre->gauche);
+    detruit_arbre(arbre->droit);
+    free(arbre);
+}
+
+// Fonction pour compter le nombre de nœuds dans un arbre
+int nombre_de_noeuds(arbre_t arbre) {
+    if (arbre == NULL)
+        return 0;
+    return 1 + nombre_de_noeuds(arbre->gauche) + nombre_de_noeuds(arbre->droit);
+}
+
+// Fonction pour afficher les valeurs des nœuds en ordre croissant
+void affiche_arbre_rec(arbre_t arbre) {
+    if (arbre != NULL) {
+        affiche_arbre_rec(arbre->gauche);
+        if (arbre->gauche != NULL)
+            printf(", ");
+        printf("%d", arbre->valeur);
+        if (arbre->droit != NULL)
+            printf(", ");
+        affiche_arbre_rec(arbre->droit);
+    }
+}
+
+void affiche_arbre(arbre_t arbre) {
+    affiche_arbre_rec(arbre);
+    printf("\n");
+}
+
+// Fonction pour afficher la structure de l'arbre
+void affiche_arbre2_rec(arbre_t arbre) {
+    if (arbre == NULL)
+        printf("_");
+    else {
+        printf("{");
+        affiche_arbre2_rec(arbre->gauche);
+        printf(",%d,", arbre->valeur);
+        affiche_arbre2_rec(arbre->droit);
+        printf("}");
+    }
+}
+
+void affiche_arbre2(arbre_t arbre) {
+    affiche_arbre2_rec(arbre);
+    printf("\n");
+}
+
+// Fonction pour comparer deux arbres binaires
+int compare(arbre_t arbre1, arbre_t arbre2) {
+    if (arbre1 == NULL)
+        return (arbre2 != NULL);
+    else {
+        if (arbre2 == NULL)
+            return 1;
+        else
+            return (arbre1->valeur != arbre2->valeur ||
+                    compare(arbre1->gauche, arbre2->gauche) ||
+                    compare(arbre1->droit, arbre2->droit));
+    }
+}
+
+// Fonction pour insérer une valeur dans un ABR
+arbre_t insere(arbre_t arbre, int valeur) {
+    if (arbre == NULL)
+        return cree_arbre(valeur, NULL, NULL);
+    else {
+        if (valeur < arbre->valeur)
+            arbre->gauche = insere(arbre->gauche, valeur);
+        else
+            arbre->droit = insere(arbre->droit, valeur);
+        return arbre;
+    }
+}
+
+// Fonction pour trouver un nœud dans un ABR
+noeud_t trouve_noeud(arbre_t arbre, int valeur) {
+    if (arbre == NULL)
+        return NULL;
+    if (valeur == arbre->valeur)
+        return arbre;
+    if (valeur < arbre->valeur)
+        return trouve_noeud(arbre->gauche, valeur);
+    else
+        return trouve_noeud(arbre->droit, valeur);
+}
+
+// Fonction pour vérifier si un arbre est un ABR
+int verifie_rec(arbre_t arbre, int *min, int *max) {
+    int i;
+    *min = *max = arbre->valeur;
+    if (arbre->gauche != NULL) {
+        if (!verifie_rec(arbre->gauche, &i, max) || !(arbre->valeur > *max))
+            return 0;
+    }
+    if (arbre->droit != NULL) {
+        if (!verifie_rec(arbre->droit, min, &i) || !(arbre->valeur <= *min))
+            return 0;
+    }
+    return 1;
+}
+
+int verifie(arbre_t arbre) {
+    int min, max;
+    return (arbre == NULL) ? 1 : verifie_rec(arbre, &min, &max);
+}
+
+// Fonction pour trier un tableau d'entiers avec un ABR
+int tri_rec(arbre_t arbre, int i, int *tableau) {
+    int j = 0;
+    if (arbre == NULL)
+        return j;
+    j = tri_rec(arbre->gauche, i, tableau);
+    tableau[i + j] = arbre->valeur;
+    j++;
+    j += tri_rec(arbre->droit, i + j, tableau);
+    return j;
+}
+
+void tri(int taille, int *tableau) {
+    int i;
+    arbre_t arbre = NULL;
+    for (i = 0; i < taille; i++)
+        arbre = insere(arbre, tableau[i]);
+    tri_rec(arbre, 0, tableau);
+    detruit_arbre(arbre);
+}
+
+// Fonction pour supprimer une valeur dans l'ABR
+arbre_t supprime(arbre_t arbre, int valeur) {
+    noeud_t noeud = arbre, *pere = &arbre;
+    noeud_t nouveau_noeud, *nouveau_pere;
+    while (noeud != NULL) {
+        if (valeur == noeud->valeur)
+            break;
+        if (valeur < noeud->valeur) {
+            pere = &noeud->gauche;
+            noeud = noeud->gauche;
+        } else {
+            pere = &noeud->droit;
+            noeud = noeud->droit;
+        }
+    }
+    if (noeud != NULL) {
+        if (noeud->gauche == NULL) {
+            if (noeud->droit == NULL) {
+                *pere = NULL;
+                free(noeud);
+            } else {
+                *pere = noeud->droit;
+                free(noeud);
+            }
+        } else {
+            if (noeud->droit == NULL) {
+                *pere = noeud->gauche;
+                free(noeud);
+            } else {
+                nouveau_noeud = noeud->droit;
+                nouveau_pere = &noeud->droit;
+                while (nouveau_noeud->gauche != NULL) {
+                    nouveau_pere = &nouveau_noeud->gauche;
+                    nouveau_noeud = nouveau_noeud->gauche;
+                }
+                noeud->valeur = nouveau_noeud->valeur;
+                *nouveau_pere = nouveau_noeud->droit;
+                free(nouveau_noeud);
+            }
+        }
+    }
+    return arbre;
+}
+
+// Fonction principale pour tester les fonctionnalités
+int main() {
+    // Exemple d'utilisation des fonctions
+    arbre_t arbre = NULL;
+    arbre = insere(arbre, 5);
+    arbre = insere(arbre, 3);
+    arbre = insere(arbre, 8);
+    arbre = insere(arbre, 1);
+    arbre = insere(arbre, 4);
+    arbre = insere(arbre, 7);
+    arbre = insere(arbre, 9);
+
+    printf("Arbre initial:\n");
+    affiche_arbre2(arbre);
+
+    printf("Nombre de noeuds: %d\n", nombre_de_noeuds(arbre));
+
+    printf("Affichage en ordre croissant:\n");
+    affiche_arbre(arbre);
+
+    int tableau[] = {5, 3, 8, 1, 4, 7, 9};
+    int taille = sizeof(tableau) / sizeof(tableau[0]);
+
+    printf("Tableau avant tri:\n");
+    for (int i = 0; i < taille; i++)
+        printf("%d ", tableau[i]);
+    printf("\n");
+
+    tri(taille, tableau);
+
+    printf("Tableau après tri:\n");
+    for (int i = 0; i < taille; i++)
+        printf("%d ", tableau[i]);
+    printf("\n");
+
+    printf("Suppression de la valeur 8:\n");
+    arbre = supprime(arbre, 8);
+    affiche_arbre2(arbre);
+
+    printf("L'arbre est un ABR: %d\n", verifie(arbre));
+
+    detruit_arbre(arbre);
+
+    return 0;
+}
