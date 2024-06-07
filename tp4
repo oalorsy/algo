@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define TAILLE_LISTE 100
+
+// Définition de la structure pour un nœud de la liste chaînée
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+// Fonction pour créer un nouveau nœud
+Node* creer_noeud(int data) {
+    Node* nouveau_noeud = (Node*)malloc(sizeof(Node));
+    nouveau_noeud->data = data;
+    nouveau_noeud->next = NULL;
+    return nouveau_noeud;
+}
+
+// Fonction pour créer une liste chaînée avec des nombres aléatoires
+Node* creer_liste(int taille, int borne_inferieure, int borne_superieure) {
+    Node* tete = NULL;
+    Node* temp = NULL;
+
+    for(int i = 0; i < taille; i++) {
+        int valeur = rand() % (borne_superieure - borne_inferieure) + borne_inferieure;
+        Node* nouveau_noeud = creer_noeud(valeur);
+        if (tete == NULL) {
+            tete = nouveau_noeud;
+        } else {
+            temp->next = nouveau_noeud;
+        }
+        temp = nouveau_noeud;
+    }
+    return tete;
+}
+
+// Fonction pour afficher la liste chaînée
+void afficher_liste(Node* tete) {
+    Node* temp = tete;
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    }
+    printf("NULL\n");
+}
+
+// Fonction pour trouver et supprimer le nœud comportant la valeur minimale
+Node* supprimer_min(Node* tete) {
+    if (tete == NULL) return NULL;
+
+    Node* temp = tete;
+    Node* min_noeud = tete;
+    Node* pre_min_noeud = NULL;
+    Node* pre_temp = NULL;
+
+    // Trouver le nœud avec la valeur minimale
+    while (temp != NULL) {
+        if (temp->data < min_noeud->data) {
+            min_noeud = temp;
+            pre_min_noeud = pre_temp;
+        }
+        pre_temp = temp;
+        temp = temp->next;
+    }
+
+    // Supprimer le nœud avec la valeur minimale
+    if (min_noeud == tete) {
+        tete = tete->next;
+    } else {
+        pre_min_noeud->next = min_noeud->next;
+    }
+    free(min_noeud);
+    return tete;
+}
+
+int main() {
+    srand(time(0));  // Initialiser le générateur de nombres aléatoires
+
+    Node* liste = creer_liste(TAILLE_LISTE, 0, 100);
+    printf("Liste avant suppression du minimum:\n");
+    afficher_liste(liste);
+
+    liste = supprimer_min(liste);
+    printf("Liste après suppression du minimum:\n");
+    afficher_liste(liste);
+
+    return 0;
+}
